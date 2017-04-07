@@ -1,0 +1,236 @@
+<!-- APIKEY: AIzaSyAGejVMxtpXEhCoeToFsuWNRa46CZgwlY0 -->
+<!-- code for popup: https://www.w3schools.com/howto/howto_css_modals.asp -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CPS406</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+
+
+    <style>
+      #map {
+        height: 80%;
+        width: 80%;
+	      margin: 0 auto;
+      }
+
+      html, body {
+        height: 100%;
+	      width: 100%;
+      }
+
+
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+
+      /* Modal Content/Box */
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%; /* Could be more or less, depending on screen size */
+      }
+
+      /* The Close Button */
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div id="myModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span id="close1" class="close">&times;</span>
+        <p>MARKER INFO</p>
+        Status: <input id="status" type="text"><br><br>
+        Type: <input id="type" type="text"><br><br>
+        Authority Contacted: <input id="authority" type="text"><br><br>
+        Description: <input id="desc" type="text"><br><br>
+
+      </div>
+
+    </div>
+
+    <div id="myModal2" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span id="close2" class="close">&times;</span>
+        <p>NEW PROBLEM</p>
+        Type of Problem: <select id="newInputType">
+          <option value="Road">Road Quality</option>
+          <option value="Saftey">Safety</option>
+          <option value="Accessibility">Accessibility</option>
+        </select><br><br>
+        Description of Problem: <input id="newDesc" type="text"><br><br>
+        <input type="button" value="Submit" onclick="newInput()" />
+      </div>
+
+    </div>
+
+    <script>
+    // Get the modal
+      var modal = document.getElementById('myModal');
+      var modal2 = document.getElementById('myModal2');
+
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+      var span2 = document.getElementsByClassName("close")[1];
+
+      // When the user clicks on the button, open the modal
+      /*btn.onclick = function() {
+          modal.style.display = "block";
+      }*/
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+        modal.style.display = "none";
+      }
+
+      span2.onclick = function() {
+        modal2.style.display = "none";
+      }
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+
+        if (event.target == modal2) {
+            modal2.style.display = "none";
+        }
+      }
+
+      //make a new google map and center it on Rye High
+      var map;
+      var latitude;
+      var longitude;
+      var statuses = [];
+      var types = [];
+      var descs = [];
+      var auths = [];
+      var priorities = [];
+      var markers = 0;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 43.657971955708206, lng: -79.3789404630661},
+          zoom: 13
+        });
+
+        var marker = new google.maps.Marker({
+          map: map
+        });
+
+        //place a few test markers
+        placeMarker(43.6577, -79.3900, 0, "Road", "Ryerson is cool", null, null);
+        placeMarker(43.6577, -79.4000, 1, "Accessibility", "Ryerson is neat", null, null);
+        placeMarker(43.6577, -79.4100, 2, "Accessibility", "Woah! Ryerson", null, null);
+        placeMarker(43.6577, -79.4200, 3, "Safety", "Woah! Ryerson!!!!", null, null);
+
+        //Grab the location of the click and enter it into the form
+        google.maps.event.addListener(map, "rightclick", function(e) {
+          modal2.style.display = "block";
+          latitude = e.latLng.lat();
+          longitude = e.latLng.lng();
+        });
+
+
+
+        //puts a new marker down with latitude, longitude, status, type, description and if an authority has been contacted
+        function placeMarker(lat1, long1, status, type, desc, authContact, priority){
+          statuses.push(status);
+          types.push(type);
+          descs.push(desc);
+          auths.push(authContact);
+          priorities.push(priority);
+
+          marker = new google.maps.Marker({
+            map: map,
+            status: statuses[markers],
+            type: types[markers],
+            desc: descs[markers],
+            authContact: auths[markers],
+            priority: priorities[markers]
+          });
+
+          markers++;
+
+          //Different colored markers for different problem types
+          var statusOut;
+          if(status == 0){
+            marker.setIcon("http://maps.google.com/mapfiles/ms/icons/green-dot.png");
+            statusOut = "Unverified"
+          }
+          else if(status == 1){
+            marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");
+            statusOut = "Verified"
+          }
+          else if(status == 2){
+            marker.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
+            statusOut = "Dispatched"
+          }
+          else if(status == 3){
+            marker.setIcon("http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png");
+            statusOut = "False Report"
+          }
+          latlong = new google.maps.LatLng({lat: lat1, lng: long1});
+
+          marker.setPosition(latlong);
+
+          //listener for double click on marker, shows marker details
+          google.maps.event.addListener(marker, 'dblclick', function() {
+            //alert(this.desc);
+            modal.style.display = "block";
+            document.getElementById("status").value = statusOut;
+            document.getElementById("type").value = type;
+            document.getElementById("desc").value = desc;
+            document.getElementById("authority").value = authContact;
+          });
+        }
+
+        initMap.placeMarker = placeMarker;
+
+      }
+
+      //Wrapper function to place a new user marker
+      function newInput(){
+        userDesc = document.getElementById('newDesc').value;
+        userInputType = document.getElementById('newInputType').value;
+
+        initMap.placeMarker(latitude, longitude, 0, userInputType, userDesc, null, null);
+        modal2.style.display = "none";
+      }
+
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGejVMxtpXEhCoeToFsuWNRa46CZgwlY0&callback=initMap"
+    async defer></script>
+  </body>
+</html>
