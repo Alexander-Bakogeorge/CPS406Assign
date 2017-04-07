@@ -20,16 +20,15 @@
 	      width: 100%;
       }
 
-
       .modal {
         display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1; /* Sit on top */
+        position: absolute; /* Stay in place */
+        z-index: 10; /* Sit on top */
         left: 0;
         top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
+        width: 500px; /* Full width */
+        height: 300px; /* Full height */
+        /*overflow: auto; /* Enable scroll if needed */
         background-color: rgb(0,0,0); /* Fallback color */
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
       }
@@ -37,8 +36,8 @@
       /* Modal Content/Box */
       .modal-content {
         background-color: #fefefe;
-        margin: 15% auto; /* 15% from the top and centered */
-        padding: 20px;
+        margin: 5% auto; /* 15% from the top and centered */
+        padding: 5px;
         border: 1px solid #888;
         width: 80%; /* Could be more or less, depending on screen size */
       }
@@ -60,6 +59,7 @@
     </style>
   </head>
   <body>
+
     <div id="map"></div>
 
     <div id="myModal" class="modal">
@@ -95,7 +95,19 @@
     </div>
 
     <script>
-    // Get the modal
+
+      var mousex;
+      var mousey;
+  		document.addEventListener('mousemove',function(e) {
+  				//div.style.left = e.pageX+"px";
+  				//div.style.top = e.pageY+"px";
+          mousex = e.pageX+"px";
+          mousey = e.pageY+"px";
+
+			});
+
+
+      // Get the modal
       var modal = document.getElementById('myModal');
       var modal2 = document.getElementById('myModal2');
 
@@ -156,9 +168,17 @@
 
         //Grab the location of the click and enter it into the form
         google.maps.event.addListener(map, "rightclick", function(e) {
+          modal.style.display = "none";
           modal2.style.display = "block";
+          modal2.style.left = mousex;
+          modal2.style.top = mousey;
           latitude = e.latLng.lat();
           longitude = e.latLng.lng();
+        });
+
+        google.maps.event.addListener(map, 'click', function() {
+          modal.style.display = "none";
+          modal2.style.display = "none";
         });
 
 
@@ -207,11 +227,14 @@
           //listener for double click on marker, shows marker details
           google.maps.event.addListener(marker, 'dblclick', function() {
             //alert(this.desc);
+            modal2.style.display = "none";
             modal.style.display = "block";
             document.getElementById("status").value = statusOut;
             document.getElementById("type").value = type;
             document.getElementById("desc").value = desc;
             document.getElementById("authority").value = authContact;
+            modal.style.left = mousex;
+            modal.style.top = mousey;
           });
         }
 
@@ -226,8 +249,9 @@
 
         initMap.placeMarker(latitude, longitude, 0, userInputType, userDesc, null, null);
         modal2.style.display = "none";
-      }
 
+        //$("#myModal2").stop().animate({left:e.pageX, top:e.pageY});
+      }
 
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGejVMxtpXEhCoeToFsuWNRa46CZgwlY0&callback=initMap"
