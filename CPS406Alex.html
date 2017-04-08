@@ -27,7 +27,7 @@
         left: 0;
         top: 0;
         width: 500px; /* Full width */
-        height: 300px; /* Full height */
+        height: 245px; /* Full height */
         /*overflow: auto; /* Enable scroll if needed */
         background-color: rgb(0,0,0); /* Fallback color */
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
@@ -36,10 +36,10 @@
       /* Modal Content/Box */
       .modal-content {
         background-color: #fefefe;
-        margin: 5% auto; /* 15% from the top and centered */
+        margin: 2% auto; /* 15% from the top and centered */
         padding: 5px;
         border: 1px solid #888;
-        width: 80%; /* Could be more or less, depending on screen size */
+        width: 95%; /* Could be more or less, depending on screen size */
       }
 
       /* The Close Button */
@@ -98,27 +98,20 @@
 
       var mousex;
       var mousey;
-  		document.addEventListener('mousemove',function(e) {
-  				//div.style.left = e.pageX+"px";
-  				//div.style.top = e.pageY+"px";
+      document.addEventListener('mousemove',function(e) {
+          //div.style.left = e.pageX+"px";
+          //div.style.top = e.pageY+"px";
           mousex = e.pageX+"px";
           mousey = e.pageY+"px";
 
-			});
-
-
-      // Get the modal
+      });
+      // Get the modal popups
       var modal = document.getElementById('myModal');
       var modal2 = document.getElementById('myModal2');
 
       // Get the <span> element that closes the modal
       var span = document.getElementsByClassName("close")[0];
       var span2 = document.getElementsByClassName("close")[1];
-
-      // When the user clicks on the button, open the modal
-      /*btn.onclick = function() {
-          modal.style.display = "block";
-      }*/
 
       // When the user clicks on <span> (x), close the modal
       span.onclick = function() {
@@ -143,12 +136,15 @@
       var map;
       var latitude;
       var longitude;
+      var lats = [];
+      var longs = [];
       var statuses = [];
       var types = [];
       var descs = [];
       var auths = [];
       var priorities = [];
       var markers = 0;
+      var civil = 0;
 
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
@@ -161,10 +157,10 @@
         });
 
         //place a few test markers
-        placeMarker(43.6577, -79.3900, 0, "Road", "Ryerson is cool", null, null);
-        placeMarker(43.6577, -79.4000, 1, "Accessibility", "Ryerson is neat", null, null);
-        placeMarker(43.6577, -79.4100, 2, "Accessibility", "Woah! Ryerson", null, null);
-        placeMarker(43.6577, -79.4200, 3, "Safety", "Woah! Ryerson!!!!", null, null);
+        placeMarker(43.6577, -79.3900, 0, "Road", "Ryerson is cool", null, 0);
+        placeMarker(43.6577, -79.4000, 1, "Accessibility", "Ryerson is neat", null, 0);
+        placeMarker(43.6577, -79.4100, 2, "Accessibility", "Woah! Ryerson", null, 0);
+        placeMarker(43.6577, -79.4200, 3, "Safety", "Woah! Ryerson!!!!", null, 0);
 
         //Grab the location of the click and enter it into the form
         google.maps.event.addListener(map, "rightclick", function(e) {
@@ -191,6 +187,20 @@
           auths.push(authContact);
           priorities.push(priority);
 
+          var i;
+          var j;
+
+          //checks radius around marker for similar type'd problems, if so, do not place.
+          for(i=0; i < lats.length; i++){
+              if(((Math.abs(lats[i] - lat1) + Math.abs(longs[i] - long1)) <=  0.0009) && type == types[i])
+                return false;
+          }
+
+
+          lats.push(lat1);
+          longs.push(long1);
+
+          //fill in data for new marker
           marker = new google.maps.Marker({
             map: map,
             status: statuses[markers],
@@ -200,28 +210,42 @@
             priority: priorities[markers]
           });
 
+          //increment number of markers
           markers++;
-
-          //Different colored markers for different problem types
+          //Different colored markers for different problem types, if user is a civil servant include priority
           var statusOut;
           if(status == 0){
-            marker.setIcon("http://maps.google.com/mapfiles/ms/icons/green-dot.png");
+            if(civil == 0){
+              marker.setIcon("http://maps.google.com/mapfiles/ms/icons/green-dot.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|71e05e|000000");}
             statusOut = "Unverified"
           }
           else if(status == 1){
-            marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");
+            if(civil == 0){
+              marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|ce1616|000000");}
             statusOut = "Verified"
           }
           else if(status == 2){
-            marker.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
+            if(civil == 0){
+              marker.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|0e5cd1|000000");}
             statusOut = "Dispatched"
           }
           else if(status == 3){
-            marker.setIcon("http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png");
+            if(civil == 0){
+              marker.setIcon("http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|999999|000000");}
             statusOut = "False Report"
           }
-          latlong = new google.maps.LatLng({lat: lat1, lng: long1});
 
+
+          //place the new marker
+          latlong = new google.maps.LatLng({lat: lat1, lng: long1});
           marker.setPosition(latlong);
 
           //listener for double click on marker, shows marker details
@@ -238,6 +262,7 @@
           });
         }
 
+        //allows placemarker function to be called outside of initMap
         initMap.placeMarker = placeMarker;
 
       }
@@ -247,10 +272,15 @@
         userDesc = document.getElementById('newDesc').value;
         userInputType = document.getElementById('newInputType').value;
 
-        initMap.placeMarker(latitude, longitude, 0, userInputType, userDesc, null, null);
+        initMap.placeMarker(latitude, longitude, 0, userInputType, userDesc, null, 0);
         modal2.style.display = "none";
 
         //$("#myModal2").stop().animate({left:e.pageX, top:e.pageY});
+      }
+
+      //call if civil servant, changes output in marker to include priority numbers
+      function isCivil(){
+        civil = 1;
       }
 
     </script>
