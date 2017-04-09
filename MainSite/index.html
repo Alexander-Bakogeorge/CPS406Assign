@@ -19,10 +19,42 @@
     <!-- Custom styles for this template -->
     <link href="jumbotron.css" rel="stylesheet">
 
+    <link href="Map.css" rel="stylesheet">
+
   </head>
 
   <body>
+    <div id="myModal" class="modal">
 
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span id="close1" class="close">&times;</span>
+        <p>MARKER INFO</p>
+        Status: <input id="status" type="text"><br><br>
+        Type: <input id="type" type="text"><br><br>
+        Authority Contacted: <input id="authority" type="text"><br><br>
+        Description: <input id="desc" type="text"><br><br>
+
+      </div>
+
+    </div>
+
+    <div id="myModal2" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span id="close2" class="close">&times;</span>
+        <p>NEW PROBLEM</p>
+        Type of Problem: <select id="newInputType">
+          <option value="Road">Road Quality</option>
+          <option value="Saftey">Safety</option>
+          <option value="Accessibility">Accessibility</option>
+        </select><br><br>
+        Description of Problem: <input id="newDesc" type="text"><br><br>
+        <input type="button" value="Submit" onclick="newInput()" />
+      </div>
+
+    </div>
     <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -56,8 +88,7 @@
     <div class="jumbotron">
       <div class="container">
         <h1>Problems in your area</h1>
-
-        <p>Insert Map functionality here</p>
+        <div id="map"></div><br>
         <p><a class="btn btn-danger btn-lg" href="addProblem.html" role="button">Report a new problem &raquo;</a></p>
       </div>
     </div>
@@ -132,13 +163,203 @@
       <footer>
         <p>&copy; 2017 Company, Inc |  <a href="About.html"> About us </a></p>
       </footer>
+
     </div> <!-- /container -->
 
 
+    <script>
+      var mousex;
+      var mousey;
+      document.addEventListener('mousemove',function(e) {
+          //div.style.left = e.pageX+"px";
+          //div.style.top = e.pageY+"px";
+          mousex = e.pageX+"px";
+          mousey = e.pageY+"px";
+
+      });
+      // Get the modal popups
+      var modal = document.getElementById('myModal');
+      var modal2 = document.getElementById('myModal2');
+
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+      var span2 = document.getElementsByClassName("close")[1];
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+        modal.style.display = "none";
+      }
+
+      span2.onclick = function() {
+        modal2.style.display = "none";
+      }
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+
+        if (event.target == modal2) {
+            modal2.style.display = "none";
+        }
+      }
+
+      //make a new google map and center it on Rye High
+      var map;
+      var latitude;
+      var longitude;
+      var lats = [];
+      var longs = [];
+      var statuses = [];
+      var types = [];
+      var descs = [];
+      var auths = [];
+      var priorities = [];
+      var markers = 0;
+      var civil = 0;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 43.657971955708206, lng: -79.3789404630661},
+          zoom: 13
+        });
+
+        var marker = new google.maps.Marker({
+          map: map
+        });
+
+        //place a few test markers
+        placeMarker(43.6577, -79.3900, 0, "Road", "Ryerson is cool", null, 0);
+        placeMarker(43.6577, -79.4000, 1, "Accessibility", "Ryerson is neat", null, 0);
+        placeMarker(43.6577, -79.4100, 2, "Accessibility", "Woah! Ryerson", null, 0);
+        placeMarker(43.6577, -79.4200, 3, "Safety", "Woah! Ryerson!!!!", null, 0);
+
+        //Grab the location of the click and enter it into the form
+        google.maps.event.addListener(map, "rightclick", function(e) {
+          modal.style.display = "none";
+          modal2.style.display = "block";
+          modal2.style.left = mousex;
+          modal2.style.top = mousey;
+          latitude = e.latLng.lat();
+          longitude = e.latLng.lng();
+        });
+
+        google.maps.event.addListener(map, 'click', function() {
+          modal.style.display = "none";
+          modal2.style.display = "none";
+        });
+
+
+
+        //puts a new marker down with latitude, longitude, status, type, description and if an authority has been contacted
+        function placeMarker(lat1, long1, status, type, desc, authContact, priority){
+          statuses.push(status);
+          types.push(type);
+          descs.push(desc);
+          auths.push(authContact);
+          priorities.push(priority);
+
+          var i;
+          var j;
+
+          //checks radius around marker for similar type'd problems, if so, do not place.
+          for(i=0; i < lats.length; i++){
+              if(((Math.abs(lats[i] - lat1) + Math.abs(longs[i] - long1)) <=  0.0009) && type == types[i])
+                return false;
+          }
+
+
+          lats.push(lat1);
+          longs.push(long1);
+
+          //fill in data for new marker
+          marker = new google.maps.Marker({
+            map: map,
+            status: statuses[markers],
+            type: types[markers],
+            desc: descs[markers],
+            authContact: auths[markers],
+            priority: priorities[markers]
+          });
+
+          //increment number of markers
+          markers++;
+          //Different colored markers for different problem types, if user is a civil servant include priority
+          var statusOut;
+          if(status == 0){
+            if(civil == 0){
+              marker.setIcon("http://maps.google.com/mapfiles/ms/icons/green-dot.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|71e05e|000000");}
+            statusOut = "Unverified"
+          }
+          else if(status == 1){
+            if(civil == 0){
+              marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|ce1616|000000");}
+            statusOut = "Verified"
+          }
+          else if(status == 2){
+            if(civil == 0){
+              marker.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|0e5cd1|000000");}
+            statusOut = "Dispatched"
+          }
+          else if(status == 3){
+            if(civil == 0){
+              marker.setIcon("http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png");}
+            else{
+              marker.setIcon("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld="+priority+"|999999|000000");}
+            statusOut = "False Report"
+          }
+
+
+          //place the new marker
+          latlong = new google.maps.LatLng({lat: lat1, lng: long1});
+          marker.setPosition(latlong);
+
+          //listener for double click on marker, shows marker details
+          google.maps.event.addListener(marker, 'dblclick', function() {
+            //alert(this.desc);
+            modal2.style.display = "none";
+            modal.style.display = "block";
+            document.getElementById("status").value = statusOut;
+            document.getElementById("type").value = type;
+            document.getElementById("desc").value = desc;
+            document.getElementById("authority").value = authContact;
+            modal.style.left = mousex;
+            modal.style.top = mousey;
+          });
+        }
+
+        //allows placemarker function to be called outside of initMap
+        initMap.placeMarker = placeMarker;
+
+      }
+
+      //Wrapper function to place a new user marker
+      function newInput(){
+        userDesc = document.getElementById('newDesc').value;
+        userInputType = document.getElementById('newInputType').value;
+
+        initMap.placeMarker(latitude, longitude, 0, userInputType, userDesc, null, 0);
+        modal2.style.display = "none";
+
+        //$("#myModal2").stop().animate({left:e.pageX, top:e.pageY});
+      }
+
+      //call if civil servant, changes output in marker to include priority numbers
+      function isCivil(){
+        civil = 1;
+      }
+    </script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
     <script src="../../dist/js/bootstrap.min.js"></script>
-
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGejVMxtpXEhCoeToFsuWNRa46CZgwlY0&callback=initMap"
+    async defer></script>
   </body>
 </html>
