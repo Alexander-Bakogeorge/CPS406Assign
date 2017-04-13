@@ -228,11 +228,33 @@
           map: map
         });
 
-        //place a few test markers
+        /*place a few test markersz
         placeMarker(43.6577, -79.3900, 0, "Road", "Ryerson is cool", null, 0);
         placeMarker(43.6577, -79.4000, 1, "Accessibility", "Ryerson is neat", null, 0);
         placeMarker(43.6577, -79.4100, 2, "Accessibility", "Woah! Ryerson", null, 0);
         placeMarker(43.6577, -79.4200, 3, "Safety", "Woah! Ryerson!!!!", null, 0);
+	*/
+
+	var storedLocations = "";
+	var name = "userdata" + "=";
+    	var decodedCookie = decodeURIComponent(document.cookie);
+    	var ca = decodedCookie.split(';');
+    	for(var i = 0; i <ca.length; i++) {
+        	var c = ca[i];
+        	while (c.charAt(0) == ' ') {
+            		c = c.substring(1);
+        	}
+        	if (c.indexOf(name) == 0) {
+            		storedLocations = c.substring(name.length, c.length);
+        	}
+    	}
+
+	var splitLocs = storedLocations.split(',');
+	//alert(splitLocs.length % 7 + 1);
+
+	for(var i = 0; i < (splitLocs.length / 7); i++){
+		placeMarker(parseFloat(splitLocs[i*7]), parseFloat(splitLocs[i*7+1]), parseInt(splitLocs[i*7+2]), splitLocs[i*7+3], splitLocs[i*7+4], splitLocs[i*7+5], splitLocs[i*7+6]);
+	}
 
         //Grab the location of the click and enter it into the form
         google.maps.event.addListener(map, "rightclick", function(e) {
@@ -332,6 +354,16 @@
             modal.style.left = mousex;
             modal.style.top = mousey;
           });
+	
+	  i=0;
+          var string = "";
+          string = lats[i] + "," + longs[i] + "," + statuses[i] + "," + types[i] + "," + descs[i] + "," + auths[i] + "," + priorities[i];	
+          for(i=1; i < markers; i++){
+            string = string + "," + lats[i] + "," + longs[i] + "," + statuses[i] + "," + types[i] + "," + descs[i] + "," + auths[i] + "," + priorities[i];
+          }
+          //alert(string);
+          document.cookie = "userdata=" + string + ";expires=Wed, 01 Jan 2020 00:00:00 UTC;path=/";
+          //alert(document.cookie);
         }
 
         //allows placemarker function to be called outside of initMap
